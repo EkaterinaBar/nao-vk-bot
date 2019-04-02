@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import bs4 as bs4
 import requests
-
+import apiai, json
 
 class VkBot:
 
@@ -20,6 +20,19 @@ class VkBot:
         user_name = self._clean_all_tag_from_str(bs.findAll("title")[0])
 
         return user_name.split()[0]
+
+    def textMessage(self, message):
+        request = apiai.ApiAI('e044062e07af4406aba6f1cd5e1dceba').text_request() # Токен API к Dialogflow
+        request.lang = 'ru' # На каком языке будет послан запрос
+        request.session_id = 'BatlabAIBot' # ID Сессии диалога (нужно, чтобы потом учить бота)
+        request.query = message # Посылаем запрос к ИИ с сообщением от юзера
+        responseJson = json.loads(request.getresponse().read().decode('utf-8'))
+        response = responseJson['result']['fulfillment']['speech'] # Разбираем JSON и вытаскиваем ответ
+            # Если есть ответ от бота - присылаем юзеру, если нет - бот его не понял
+        if response:
+            return response
+        else:
+            return "Что?"
 
     def new_message(self, message):
 
@@ -40,7 +53,7 @@ class VkBot:
             return f"Пока-пока, {self._USERNAME}!"
 
         else:
-            return "Не понимаю о чем вы..."
+            return self.textMessage(message)
 
     def _get_time(self):
         request = requests.get("https://my-calend.ru/date-and-time-today")

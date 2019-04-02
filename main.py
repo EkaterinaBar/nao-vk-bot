@@ -6,6 +6,7 @@ from vk_api.longpoll import VkLongPoll, VkEventType
 #-- from commander.commander import Commander
 from naoVkBot import VkBot
 import random
+import apiai, json
 # --
 
 def get_random_id():

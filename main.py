@@ -4,7 +4,7 @@ from vk_api.longpoll import VkLongPoll, VkEventType
 
 # --
 #-- from commander.commander import Commander
-from vk_bot import VkBot
+from naoVkBot import VkBot
 import random
 # --
 

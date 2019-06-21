@@ -3,71 +3,61 @@ import bs4 as bs4
 import requests
 import apiai, json
 
-class VkBot:
+class Bot:
 
     def __init__(self, user_id):
-        print("\nСоздан объект бота!")
+        
+        self.ID = user_id
+        
+        self.Name = self.get_name(user_id)
 
-        self._USER_ID = user_id
-        self._USERNAME = self._get_user_name_from_vk_id(user_id)
+        self.Commands= ["ПРИВЕТ", "ПОГОДА", "ВРЕМЯ", "ПОКА"]
 
-        self._COMMANDS = ["ПРИВЕТ", "ПОГОДА", "ВРЕМЯ", "ПОКА"]
-
-    def _get_user_name_from_vk_id(self, user_id):
+    def get_name(self, user_id):
         request = requests.get("https://vk.com/id"+str(user_id))
         bs = bs4.BeautifulSoup(request.text, "html.parser")
 
-        user_name = self._clean_all_tag_from_str(bs.findAll("title")[0])
+        user_name = self.clean(bs.findAll("title")[0])
 
         return user_name.split()[0]
 
     def textMessage(self, message):
-        request = apiai.ApiAI('e044062e07af4406aba6f1cd5e1dceba').text_request() # Токен API к Dialogflow
-        request.lang = 'ru' # На каком языке будет послан запрос
-        request.session_id = 'BatlabAIBot' # ID Сессии диалога (нужно, чтобы потом учить бота)
-        request.query = message # Посылаем запрос к ИИ с сообщением от юзера
+        request = apiai.ApiAI('e044062e07af4406aba6f1cd5e1dceba').text_request() # ключ API к Dialogflow
+        request.lang = 'ru' # язык запроса
+        request.session_id = 'NaoBot' # ID Сессии диалога
+        request.query = message # Посылаем запрос с сообщением
         responseJson = json.loads(request.getresponse().read().decode('utf-8'))
-        response = responseJson['result']['fulfillment']['speech'] # Разбираем JSON и вытаскиваем ответ
-            # Если есть ответ от бота - присылаем юзеру, если нет - бот его не понял
+        response = responseJson['result']['fulfillment']['speech'] # Разбираем JSON и получаем ответ
+        # Если есть ответ от бота - возвращаем его
         if response:
             return response
         else:
             return "Что?"
 
-    def new_message(self, message):
+    def new_message(self, mess):
 
-        # Привет
-        if message.upper() == self._COMMANDS[0]:
-            return f"Привет-привет, {self._USERNAME}!"
+        if mess.upper() == self.Commands[0]:
+            return f"Приветствую, {self.Name}!"
 
-        # Погода
-        elif message.upper() == self._COMMANDS[1]:
-            return self._get_weather()
+        elif mess.upper() == self.Commands[1]:
+            return self.weather()
 
-        # Время
-        elif message.upper() == self._COMMANDS[2]:
-            return self._get_time()
+        elif mess.upper() == self.Commands[2]:
+            return self.time()
 
-        # Пока
-        elif message.upper() == self._COMMANDS[3]:
-            return f"Пока-пока, {self._USERNAME}!"
+        elif mess.upper() == self.Commands[3]:
+            return f"До свидания, {self.Name}!"
 
         else:
-            return self.textMessage(message)
+            return self.textMessage(mess)
 
-    def _get_time(self):
+    def time(self):
         request = requests.get("https://my-calend.ru/date-and-time-today")
         b = bs4.BeautifulSoup(request.text, "html.parser")
-        return self._clean_all_tag_from_str(str(b.select(".page")[0].findAll("h2")[1])).split()[1]
+        return self.clean(str(b.select(".page")[0].findAll("h2")[1])).split()[1]
 
     @staticmethod
-    def _clean_all_tag_from_str(string_line):
-
-        """
-        Очистка строки stringLine от тэгов и их содержимых
-        :param string_line: Очищаемая строка
-        :return: очищенная строка
-        """
+    def clean(string_line):
 
         result = ""
         not_skip = True
@@ -84,7 +74,7 @@ class VkBot:
         return result
 
     @staticmethod
-    def _get_weather(city: str = "москва") -> list:
+    def weather(city: str = "москва") -> list:
 
         request = requests.get("https://sinoptik.com.ru/погода-" + city)
         b = bs4.BeautifulSoup(request.text, "html.parser")
